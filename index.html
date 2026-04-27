@@ -136,15 +136,30 @@
     };
 
     // ── Live check via DecAPI ───────────────────────────────────────────────
+    // DecAPI returns an uptime string like "2 hours, 30 minutes" when live.
+    // Check positively for that pattern rather than checking for absence of error words.
     async function isLive(channel) {
         try {
             const url = encodeURIComponent(DECAPI_BASE + channel);
             const res = await fetch(PROXY + url);
+            if (!res.ok) return false;
             const txt = await res.text();
-            return txt.trim().length > 0 && !txt.toLowerCase().includes('not live') && !txt.toLowerCase().includes('error');
+            return /\d+\s+(hour|minute|second)/i.test(txt.trim());
         } catch {
             return false;
         }
+    }
+
+    // ── Run isLive in small batches to avoid proxy rate-limiting ───────────
+    async function checkAllLive(list) {
+        const BATCH = 5;
+        const results = [];
+        for (let i = 0; i < list.length; i += BATCH) {
+            const flags = await Promise.all(list.slice(i, i + BATCH).map(s => isLive(s.channel)));
+            results.push(...flags);
+            if (i + BATCH < list.length) await new Promise(r => setTimeout(r, 400));
+        }
+        return results;
     }
 
     // ── Render a channel card ───────────────────────────────────────────────
@@ -226,8 +241,8 @@
             const res = await fetch('vpinhub_tv.json');
             streamers  = await res.json();
 
-            // Check all channels in parallel (isLive catches its own errors)
-            const liveFlags = await Promise.all(streamers.map(s => isLive(s.channel)));
+            // Check channels in batches to avoid proxy rate-limiting
+            const liveFlags = await checkAllLive(streamers);
             liveChannels    = streamers.filter((_, i) => liveFlags[i]).map(s => s.channel);
 
             setStatus(
