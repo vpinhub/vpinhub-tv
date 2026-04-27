@@ -105,13 +105,14 @@
     </section>
 
     <!-- Channel Grid -->
-    <div class="mb-4">
-        <h2 class="text-xs font-black uppercase tracking-widest text-gray-500">Community Streamers</h2>
-        <div class="border-b border-white/5 mt-2 mb-6"></div>
-    </div>
-
-    <div id="channel-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <!-- Populated by JS -->
+    <div id="streams-section" class="hidden">
+        <div class="mb-4">
+            <h2 class="text-xs font-black uppercase tracking-widest text-gray-500">Live Now</h2>
+            <div class="border-b border-white/5 mt-2 mb-6"></div>
+        </div>
+        <div id="channel-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Populated by JS -->
+        </div>
     </div>
 
 </main>
@@ -251,18 +252,13 @@
                     : 'No streams live right now'
             );
 
-            // Render cards — live first
-            const sorted = [
-                ...streamers.filter((_, i) =>  liveFlags[i]),
-                ...streamers.filter((_, i) => !liveFlags[i]),
-            ];
-            document.getElementById('channel-grid').innerHTML =
-                sorted.map(s => renderCard(s, liveChannels.includes(s.channel))).join('');
-
-            // Auto-select first live channel, or show offline message
-            if (liveChannels.length > 0) {
-                const first = streamers.find(s => liveChannels.includes(s.channel));
-                selectChannel(first.channel, first.name);
+            // Render live channel cards only
+            const liveStreamers = streamers.filter((_, i) => liveFlags[i]);
+            if (liveStreamers.length > 0) {
+                document.getElementById('channel-grid').innerHTML =
+                    liveStreamers.map(s => renderCard(s, true)).join('');
+                document.getElementById('streams-section').classList.remove('hidden');
+                selectChannel(liveStreamers[0].channel, liveStreamers[0].name);
             } else {
                 document.getElementById('offline-message').classList.remove('hidden');
             }
