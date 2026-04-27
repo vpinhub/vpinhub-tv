@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPINHUB TV</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Encode+Sans:wght@400;700;900&family=MedievalSharp&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Encode Sans', sans-serif; background: #020617; color: white; overflow-x: hidden; }
+        .medieval { font-family: 'MedievalSharp', cursive; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
+        .hero-gradient { background: radial-gradient(circle at top, #1e293b 0%, #020617 70%); }
+
+        .channel-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
+        .channel-card:hover { transform: translateY(-6px) scale(1.02); border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.06); }
+        .channel-card.active { border-color: rgba(6,182,212,0.6); background: rgba(6,182,212,0.05); }
+
+        .live-badge { background: #ef4444; color: white; font-size: 9px; font-weight: 900; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 0 15px rgba(239,68,68,0.4); }
+        .live-dot { height: 6px; width: 6px; background: white; border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .offline-badge { background: rgba(255,255,255,0.08); color: #6b7280; font-size: 9px; font-weight: 900; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .color-amber  { --accent: #f59e0b; --accent-bg: rgba(245,158,11,0.15); --accent-dim: rgba(245,158,11,0.2); }
+        .color-emerald{ --accent: #10b981; --accent-bg: rgba(16,185,129,0.15); --accent-dim: rgba(16,185,129,0.2); }
+        .color-cyan   { --accent: #06b6d4; --accent-bg: rgba(6,182,212,0.15);  --accent-dim: rgba(6,182,212,0.2);  }
+        .color-fuchsia{ --accent: #d946ef; --accent-bg: rgba(217,70,239,0.15); --accent-dim: rgba(217,70,239,0.2); }
+        .color-orange { --accent: #f97316; --accent-bg: rgba(249,115,22,0.15); --accent-dim: rgba(249,115,22,0.2); }
+        .color-indigo { --accent: #6366f1; --accent-bg: rgba(99,102,241,0.15); --accent-dim: rgba(99,102,241,0.2); }
+
+        .channel-card .card-border { border-top-color: var(--accent); }
+        .channel-card .card-tag   { background: var(--accent-dim); color: var(--accent); }
+        .channel-card .card-footer{ color: var(--accent); }
+
+        .twitch-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 0.75rem; }
+        .twitch-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 0.75rem; }
+
+        #checking-spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="min-h-screen hero-gradient pb-20">
+
+<!-- Header -->
+<header class="container mx-auto px-6 py-12 text-center">
+    <a href="index.html" class="hover:opacity-80 transition-opacity">
+        <h1 class="text-6xl md:text-8xl font-black italic tracking-tighter uppercase mb-2">
+            VPIN<span class="text-orange-500">HUB</span> <span class="text-cyan-400">TV</span>
+        </h1>
+    </a>
+    <p class="medieval text-gray-400 tracking-[0.3em] uppercase text-sm">Virtual Pinball Live Streams</p>
+</header>
+
+<main class="container mx-auto px-6 max-w-7xl">
+
+    <!-- Status bar -->
+    <div id="status-bar" class="flex items-center justify-center gap-3 mb-10 text-xs font-bold uppercase tracking-widest text-gray-500">
+        <svg id="checking-spinner" class="w-4 h-4 text-cyan-500" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+        <span id="status-text">Checking streams...</span>
+    </div>
+
+    <!-- Featured Player (shown when someone is live) -->
+    <section id="player-section" class="hidden mb-12">
+        <div class="glass rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+            <div class="bg-white/5 px-6 py-3 border-b border-white/10 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="live-badge"><span class="live-dot"></span>Live Now</div>
+                    <span id="player-name" class="text-sm font-black uppercase tracking-widest text-white"></span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div id="channel-switcher" class="hidden items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+                        <button onclick="cycleChannel(-1)" class="text-gray-400 hover:text-white transition-colors">◀ Prev</button>
+                        <span class="text-white/20">|</span>
+                        <button onclick="cycleChannel(1)" class="text-gray-400 hover:text-white transition-colors">Next ▶</button>
+                    </div>
+                    <a id="player-twitch-link" href="#" target="_blank"
+                       class="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-white transition-colors">
+                        Open on Twitch ↗
+                    </a>
+                </div>
+            </div>
+            <div class="p-4">
+                <div class="twitch-wrapper">
+                    <iframe id="twitch-player"
+                        src=""
+                        allowfullscreen
+                        allow="autoplay; fullscreen">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- No live streams message -->
+    <section id="offline-message" class="hidden mb-12">
+        <div class="glass rounded-2xl p-10 text-center border border-white/5">
+            <div class="text-5xl mb-4">📺</div>
+            <h2 class="text-xl font-black uppercase italic mb-2">No Streams Live Right Now</h2>
+            <p class="text-gray-500 text-sm">Check the schedule below and come back when your favourite streamer is on.</p>
+        </div>
+    </section>
+
+    <!-- Channel Grid -->
+    <div class="mb-4">
+        <h2 class="text-xs font-black uppercase tracking-widest text-gray-500">Community Streamers</h2>
+        <div class="border-b border-white/5 mt-2 mb-6"></div>
+    </div>
+
+    <div id="channel-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Populated by JS -->
+    </div>
+
+</main>
+
+<script>
+    const PROXY        = 'https://api.allorigins.win/raw?url=';
+    const DECAPI_BASE  = 'https://decapi.me/twitch/uptime/';
+    const TWITCH_EMBED = 'https://player.twitch.tv/?parent=vpinhub.com&parent=vpinhub.github.io&channel=';
+
+    let streamers   = [];
+    let liveChannels = [];
+    let activeChannel = null;
+
+    // ── Colour helpers ──────────────────────────────────────────────────────
+    const COLOR_BORDERS = {
+        amber:   'border-amber-500',
+        emerald: 'border-emerald-500',
+        cyan:    'border-cyan-500',
+        fuchsia: 'border-fuchsia-500',
+        orange:  'border-orange-500',
+        indigo:  'border-indigo-500',
+    };
+
+    // ── Live check via DecAPI ───────────────────────────────────────────────
+    async function isLive(channel) {
+        try {
+            const url = encodeURIComponent(DECAPI_BASE + channel);
+            const res = await fetch(PROXY + url);
+            const txt = await res.text();
+            return txt.trim().length > 0 && !txt.toLowerCase().includes('not live') && !txt.toLowerCase().includes('error');
+        } catch {
+            return false;
+        }
+    }
+
+    // ── Render a channel card ───────────────────────────────────────────────
+    function renderCard(streamer, live) {
+        const color  = streamer.color || 'cyan';
+        const border = COLOR_BORDERS[color] || 'border-cyan-500';
+        const isActive = activeChannel === streamer.channel;
+
+        return `
+        <div class="channel-card color-${color} glass rounded-2xl p-6 border-t-4 card-border ${border} ${isActive ? 'active' : ''}"
+             onclick="selectChannel('${streamer.channel}', '${streamer.name}')"
+             data-channel="${streamer.channel}">
+            <div class="flex justify-between items-start mb-4">
+                <span class="card-tag text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+                    ${streamer.schedule}
+                </span>
+                ${live
+                    ? `<div class="live-badge"><span class="live-dot"></span>Live</div>`
+                    : `<span class="offline-badge">Offline</span>`
+                }
+            </div>
+            <h3 class="text-xl font-black uppercase italic leading-tight mb-1">${streamer.name}</h3>
+            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-3">${streamer.channel} &middot; ${streamer.game}</p>
+            <p class="text-gray-500 text-xs italic leading-relaxed">${streamer.description}</p>
+            <div class="mt-6 pt-4 border-t border-white/5 card-footer font-bold uppercase text-[10px] tracking-widest flex justify-between items-center">
+                <span>${live ? 'Watch Now' : 'Schedule'}</span>
+                <span>${live ? '▶' : '→'}</span>
+            </div>
+        </div>`;
+    }
+
+    // ── Switch the embedded player ──────────────────────────────────────────
+    function selectChannel(channel, name) {
+        if (!liveChannels.includes(channel)) return;
+        activeChannel = channel;
+
+        document.getElementById('twitch-player').src     = TWITCH_EMBED + channel;
+        document.getElementById('player-name').textContent = name;
+        document.getElementById('player-twitch-link').href  = 'https://twitch.tv/' + channel;
+
+        // Show channel switcher only when multiple streams are live
+        const switcher = document.getElementById('channel-switcher');
+        if (liveChannels.length > 1) {
+            switcher.classList.remove('hidden');
+            switcher.classList.add('flex');
+        } else {
+            switcher.classList.add('hidden');
+            switcher.classList.remove('flex');
+        }
+
+        // Update active state on cards
+        document.querySelectorAll('.channel-card').forEach(c => {
+            c.classList.toggle('active', c.dataset.channel === channel);
+        });
+
+        document.getElementById('player-section').classList.remove('hidden');
+        document.getElementById('offline-message').classList.add('hidden');
+        document.getElementById('player-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ── Cycle through live channels ─────────────────────────────────────────
+    function cycleChannel(direction) {
+        const idx  = liveChannels.indexOf(activeChannel);
+        const next = (idx + direction + liveChannels.length) % liveChannels.length;
+        const ch   = liveChannels[next];
+        selectChannel(ch, streamers.find(s => s.channel === ch).name);
+    }
+
+    // ── Status bar helper ───────────────────────────────────────────────────
+    function setStatus(text) {
+        document.getElementById('checking-spinner').style.display = 'none';
+        document.getElementById('status-text').textContent = text;
+    }
+
+    // ── Main init ───────────────────────────────────────────────────────────
+    async function init() {
+        try {
+            // Load streamer list
+            const res = await fetch('vpinhub_tv.json');
+            streamers  = await res.json();
+
+            // Check all channels in parallel (isLive catches its own errors)
+            const liveFlags = await Promise.all(streamers.map(s => isLive(s.channel)));
+            liveChannels    = streamers.filter((_, i) => liveFlags[i]).map(s => s.channel);
+
+            setStatus(
+                liveChannels.length > 0
+                    ? `${liveChannels.length} stream${liveChannels.length > 1 ? 's' : ''} live now`
+                    : 'No streams live right now'
+            );
+
+            // Render cards — live first
+            const sorted = [
+                ...streamers.filter((_, i) =>  liveFlags[i]),
+                ...streamers.filter((_, i) => !liveFlags[i]),
+            ];
+            document.getElementById('channel-grid').innerHTML =
+                sorted.map(s => renderCard(s, liveChannels.includes(s.channel))).join('');
+
+            // Auto-select first live channel, or show offline message
+            if (liveChannels.length > 0) {
+                const first = streamers.find(s => liveChannels.includes(s.channel));
+                selectChannel(first.channel, first.name);
+            } else {
+                document.getElementById('offline-message').classList.remove('hidden');
+            }
+
+        } catch (err) {
+            console.error('VPINHUB TV init error:', err);
+            setStatus('Could not load stream data — please try refreshing');
+            document.getElementById('offline-message').classList.remove('hidden');
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>
