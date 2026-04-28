@@ -73,6 +73,13 @@
                         <span class="text-white/20">|</span>
                         <button onclick="cycleChannel(1)" class="text-gray-400 hover:text-white transition-colors">Next ▶</button>
                     </div>
+                    <span class="text-white/20">|</span>
+                    <div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+                        <button id="chat-toggle-btn" onclick="toggleChat()" class="text-gray-400 hover:text-cyan-400 transition-colors">Chat ☰</button>
+                        <span class="text-white/20">|</span>
+                        <button onclick="popoutChat()" class="text-gray-400 hover:text-white transition-colors">Pop Out ↗</button>
+                    </div>
+                    <span class="text-white/20">|</span>
                     <a id="player-twitch-link" href="#" target="_blank"
                        class="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-white transition-colors">
                         Open on Twitch ↗
@@ -80,12 +87,23 @@
                 </div>
             </div>
             <div class="p-4">
-                <div class="twitch-wrapper">
-                    <iframe id="twitch-player"
-                        src=""
-                        allowfullscreen
-                        allow="autoplay; fullscreen">
-                    </iframe>
+                <div class="flex flex-col lg:flex-row gap-4">
+                    <div class="flex-1 min-w-0">
+                        <div class="twitch-wrapper">
+                            <iframe id="twitch-player"
+                                src=""
+                                allowfullscreen
+                                allow="autoplay; fullscreen">
+                            </iframe>
+                        </div>
+                    </div>
+                    <div id="chat-panel" class="hidden w-full lg:w-80 xl:w-96 flex-shrink-0">
+                        <iframe id="twitch-chat"
+                            src=""
+                            style="width:100%;height:100%;min-height:500px;border:none;border-radius:0.75rem;"
+                            allowfullscreen>
+                        </iframe>
+                    </div>
                 </div>
             </div>
         </div>
@@ -118,10 +136,12 @@
     const PROXY        = 'https://api.allorigins.win/raw?url=';
     const DECAPI_BASE  = 'https://decapi.me/twitch/uptime/';
     const TWITCH_EMBED = 'https://player.twitch.tv/?parent=vpinhub.com&parent=vpinhub.github.io&parent=localhost&channel=';
+    const TWITCH_CHAT  = ch => `https://www.twitch.tv/embed/${ch}/chat?darkpopout&parent=vpinhub.com&parent=vpinhub.github.io&parent=localhost`;
 
     let streamers    = [];
     let liveChannels = [];
     let activeChannel = null;
+    let chatOpen     = false;
 
     // ── Colour helpers ──────────────────────────────────────────────────────
     const COLOR_BORDERS = {
@@ -167,6 +187,7 @@
         document.getElementById('twitch-player').src      = TWITCH_EMBED + channel;
         document.getElementById('player-name').textContent = name;
         document.getElementById('player-twitch-link').href = 'https://twitch.tv/' + channel;
+        if (chatOpen) document.getElementById('twitch-chat').src = TWITCH_CHAT(channel);
 
         const switcher = document.getElementById('channel-switcher');
         if (liveChannels.length > 1) {
@@ -192,6 +213,37 @@
         const next = (idx + direction + liveChannels.length) % liveChannels.length;
         const ch   = liveChannels[next];
         selectChannel(ch, streamers.find(s => s.channel === ch).name);
+    }
+
+    // ── Toggle embedded chat panel ──────────────────────────────────────────
+    function toggleChat() {
+        chatOpen = !chatOpen;
+        const panel = document.getElementById('chat-panel');
+        const btn   = document.getElementById('chat-toggle-btn');
+        if (chatOpen) {
+            document.getElementById('twitch-chat').src = TWITCH_CHAT(activeChannel);
+            panel.classList.remove('hidden');
+            btn.textContent = 'Hide Chat';
+            btn.classList.remove('hover:text-cyan-400');
+            btn.classList.add('hover:text-red-400');
+        } else {
+            panel.classList.add('hidden');
+            document.getElementById('twitch-chat').src = '';
+            btn.textContent = 'Chat ☰';
+            btn.classList.remove('hover:text-red-400');
+            btn.classList.add('hover:text-cyan-400');
+        }
+    }
+
+    // ── Pop chat out into a small window ────────────────────────────────────
+    function popoutChat() {
+        if (activeChannel) {
+            window.open(
+                `https://www.twitch.tv/popout/${activeChannel}/chat?popout=`,
+                'twitch-chat-popout',
+                'width=400,height=600,resizable=yes'
+            );
+        }
     }
 
     // ── Status bar helper ───────────────────────────────────────────────────
