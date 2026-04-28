@@ -276,17 +276,78 @@
         return results;
     }
 
-    // ── Render results ──────────────────────────────────────────────────────
-    function applyLiveStatus(live) {
+    // ── Fetch live list — cache first, proxy fallback if stale ─────────────
+    // live_status.json is written by GitHub Actions but its schedule is unreliable.
+    // If the file is older than STALE_MS, skip it and check via the proxy directly.
+    const STALE_MS = 35 * 60 * 1000; // 35 minutes — matches the 30-min Actions schedule
+
+    async function fetchLive() {
+        try {
+            const r = await fetch('live_status.json?t=' + Date.now());
+            if (r.ok) {
+                const s   = await r.json();
+                const age = Date.now() - new Date(s.updated);
+                if (age < STALE_MS) {
+                    return { live: s.live || [], updated: new Date(s.updated) };
+                }
+            }
+        } catch { /* fall through */ }
+
+        // Cache missing or stale — check via proxy
+        const flags = await checkAllLive(streamers);
+        return {
+            live:    streamers.filter((_, i) => flags[i]).map(s => s.channel),
+            updated: new Date(),
+        };
+    }
+
+    // ── Apply live list to the UI ───────────────────────────────────────────
+    function applyLive(live) {
         liveChannels = live;
         const liveStreamers = streamers.filter(s => live.includes(s.channel));
 
         if (liveStreamers.length > 0) {
             document.getElementById('channel-grid').innerHTML =
-                liveStreamers.map(s => renderCard(s)).join('');
+                liveStreamers.map(renderCard).join('');
             document.getElementById('streams-section').classList.remove('hidden');
-            selectChannel(liveStreamers[0].channel, liveStreamers[0].name);
+            document.getElementById('offline-message').classList.add('hidden');
+
+            if (!activeChannel || !live.includes(activeChannel)) {
+                // Active channel gone or nothing playing — pick the first live one
+                selectChannel(liveStreamers[0].channel, liveStreamers[0].name);
+            } else {
+                // Keep current channel playing, just refresh card highlights
+                document.querySelectorAll('.channel-card').forEach(c => {
+                    c.classList.toggle('active', c.dataset.channel === activeChannel);
+                });
+            }
         } else {
+            document.getElementById('streams-section').classList.add('hidden');
+            document.getElementById('channel-grid').innerHTML = '';
+            if (activeChannel) {
+                document.getElementById('twitch-player').src = '';
+                document.getElementById('player-section').classList.add('hidden');
+                activeChannel = null;
+                if (chatOpen) toggleChat();
+            }
+            document.getElementById('offline-message').classList.remove('hidden');
+        }
+    }
+
+    // ── Refresh cycle (called on load and every 5 minutes) ─────────────────
+    async function refresh() {
+        try {
+            const { live, updated } = await fetchLive();
+            const age    = Math.round((Date.now() - updated) / 60000);
+            const ageStr = age < 1 ? 'just now' : `${age}m ago`;
+            setStatus(live.length > 0
+                ? `${live.length} stream${live.length !== 1 ? 's' : ''} live · checked ${ageStr}`
+                : `No streams live · checked ${ageStr}`
+            );
+            applyLive(live);
+        } catch (err) {
+            console.error('VPINHUB TV refresh error:', err);
+            setStatus('Could not load stream data — please try refreshing');
             document.getElementById('offline-message').classList.remove('hidden');
         }
     }
@@ -294,46 +355,15 @@
     // ── Main init ───────────────────────────────────────────────────────────
     async function init() {
         try {
-            const res = await fetch('vpinhub_tv.json');
-            streamers = await res.json();
-
-            // Fast path: read cached live_status.json written by GitHub Actions
-            try {
-                const statusRes = await fetch('live_status.json?t=' + Date.now());
-                if (!statusRes.ok) throw new Error('no status file');
-
-                const status = await statusRes.json();
-                const live   = status.live || [];
-                const updated = new Date(status.updated);
-                const age = Math.round((Date.now() - updated) / 60000);
-                const ageStr = age < 1 ? 'just now' : `${age}m ago`;
-
-                setStatus(live.length > 0
-                    ? `${live.length} stream${live.length !== 1 ? 's' : ''} live · checked ${ageStr}`
-                    : `No streams live · checked ${ageStr}`
-                );
-
-                applyLiveStatus(live);
-                return;
-            } catch { /* fall through to proxy */ }
-
-            // Fallback: check via AllOrigins proxy
-            setStatus('Checking streams via fallback…');
-            const liveFlags = await checkAllLive(streamers);
-            const live = streamers.filter((_, i) => liveFlags[i]).map(s => s.channel);
-
-            setStatus(live.length > 0
-                ? `${live.length} stream${live.length !== 1 ? 's' : ''} live now`
-                : 'No streams live right now'
-            );
-
-            applyLiveStatus(live);
-
+            streamers = await fetch('vpinhub_tv.json').then(r => r.json());
         } catch (err) {
             console.error('VPINHUB TV init error:', err);
-            setStatus('Could not load stream data — please try refreshing');
+            setStatus('Could not load channel list — please try refreshing');
             document.getElementById('offline-message').classList.remove('hidden');
+            return;
         }
+        await refresh();
+        setInterval(() => { if (!activeChannel) refresh(); }, 5 * 60 * 1000);
     }
 
     init();
