@@ -20,8 +20,6 @@
         .live-dot { height: 6px; width: 6px; background: white; border-radius: 50%; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        .offline-badge { background: rgba(255,255,255,0.08); color: #6b7280; font-size: 9px; font-weight: 900; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
-
         .color-amber  { --accent: #f59e0b; --accent-bg: rgba(245,158,11,0.15); --accent-dim: rgba(245,158,11,0.2); }
         .color-emerald{ --accent: #10b981; --accent-bg: rgba(16,185,129,0.15); --accent-dim: rgba(16,185,129,0.2); }
         .color-cyan   { --accent: #06b6d4; --accent-bg: rgba(6,182,212,0.15);  --accent-dim: rgba(6,182,212,0.2);  }
@@ -44,11 +42,9 @@
 
 <!-- Header -->
 <header class="container mx-auto px-6 py-12 text-center">
-    <a href="index.html" class="hover:opacity-80 transition-opacity">
-        <h1 class="text-6xl md:text-8xl font-black italic tracking-tighter uppercase mb-2">
-            VPIN<span class="text-orange-500">HUB</span> <span class="text-cyan-400">TV</span>
-        </h1>
-    </a>
+    <h1 class="text-6xl md:text-8xl font-black italic tracking-tighter uppercase mb-2">
+        VPIN<span class="text-orange-500">HUB</span> <span class="text-cyan-400">TV</span>
+    </h1>
     <p class="medieval text-gray-400 tracking-[0.3em] uppercase text-sm">Virtual Pinball Live Streams</p>
 </header>
 
@@ -100,11 +96,11 @@
         <div class="glass rounded-2xl p-10 text-center border border-white/5">
             <div class="text-5xl mb-4">📺</div>
             <h2 class="text-xl font-black uppercase italic mb-2">No Streams Live Right Now</h2>
-            <p class="text-gray-500 text-sm">Check the schedule below and come back when your favourite streamer is on.</p>
+            <p class="text-gray-500 text-sm">Check back soon — the community streams regularly throughout the week.</p>
         </div>
     </section>
 
-    <!-- Channel Grid -->
+    <!-- Live Channel Grid (hidden when nobody is live) -->
     <div id="streams-section" class="hidden">
         <div class="mb-4">
             <h2 class="text-xs font-black uppercase tracking-widest text-gray-500">Live Now</h2>
@@ -118,11 +114,12 @@
 </main>
 
 <script>
+    // Fallback proxy + DecAPI (used only when live_status.json is unavailable)
     const PROXY        = 'https://api.allorigins.win/raw?url=';
     const DECAPI_BASE  = 'https://decapi.me/twitch/uptime/';
-    const TWITCH_EMBED = 'https://player.twitch.tv/?parent=vpinhub.com&parent=vpinhub.github.io&channel=';
+    const TWITCH_EMBED = 'https://player.twitch.tv/?parent=vpinhub.com&parent=vpinhub.github.io&parent=localhost&channel=';
 
-    let streamers   = [];
+    let streamers    = [];
     let liveChannels = [];
     let activeChannel = null;
 
@@ -136,35 +133,8 @@
         indigo:  'border-indigo-500',
     };
 
-    // ── Live check via DecAPI ───────────────────────────────────────────────
-    // DecAPI returns an uptime string like "2 hours, 30 minutes" when live.
-    // Check positively for that pattern rather than checking for absence of error words.
-    async function isLive(channel) {
-        try {
-            const url = encodeURIComponent(DECAPI_BASE + channel);
-            const res = await fetch(PROXY + url);
-            if (!res.ok) return false;
-            const txt = await res.text();
-            return /\d+\s+(hour|minute|second)/i.test(txt.trim());
-        } catch {
-            return false;
-        }
-    }
-
-    // ── Run isLive in small batches to avoid proxy rate-limiting ───────────
-    async function checkAllLive(list) {
-        const BATCH = 5;
-        const results = [];
-        for (let i = 0; i < list.length; i += BATCH) {
-            const flags = await Promise.all(list.slice(i, i + BATCH).map(s => isLive(s.channel)));
-            results.push(...flags);
-            if (i + BATCH < list.length) await new Promise(r => setTimeout(r, 400));
-        }
-        return results;
-    }
-
     // ── Render a channel card ───────────────────────────────────────────────
-    function renderCard(streamer, live) {
+    function renderCard(streamer) {
         const color  = streamer.color || 'cyan';
         const border = COLOR_BORDERS[color] || 'border-cyan-500';
         const isActive = activeChannel === streamer.channel;
@@ -177,17 +147,14 @@
                 <span class="card-tag text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
                     ${streamer.schedule}
                 </span>
-                ${live
-                    ? `<div class="live-badge"><span class="live-dot"></span>Live</div>`
-                    : `<span class="offline-badge">Offline</span>`
-                }
+                <div class="live-badge"><span class="live-dot"></span>Live</div>
             </div>
             <h3 class="text-xl font-black uppercase italic leading-tight mb-1">${streamer.name}</h3>
             <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-3">${streamer.channel} &middot; ${streamer.game}</p>
             <p class="text-gray-500 text-xs italic leading-relaxed">${streamer.description}</p>
             <div class="mt-6 pt-4 border-t border-white/5 card-footer font-bold uppercase text-[10px] tracking-widest flex justify-between items-center">
-                <span>${live ? 'Watch Now' : 'Schedule'}</span>
-                <span>${live ? '▶' : '→'}</span>
+                <span>Watch Now</span>
+                <span>▶</span>
             </div>
         </div>`;
     }
@@ -197,11 +164,10 @@
         if (!liveChannels.includes(channel)) return;
         activeChannel = channel;
 
-        document.getElementById('twitch-player').src     = TWITCH_EMBED + channel;
+        document.getElementById('twitch-player').src      = TWITCH_EMBED + channel;
         document.getElementById('player-name').textContent = name;
-        document.getElementById('player-twitch-link').href  = 'https://twitch.tv/' + channel;
+        document.getElementById('player-twitch-link').href = 'https://twitch.tv/' + channel;
 
-        // Show channel switcher only when multiple streams are live
         const switcher = document.getElementById('channel-switcher');
         if (liveChannels.length > 1) {
             switcher.classList.remove('hidden');
@@ -211,7 +177,6 @@
             switcher.classList.remove('flex');
         }
 
-        // Update active state on cards
         document.querySelectorAll('.channel-card').forEach(c => {
             c.classList.toggle('active', c.dataset.channel === channel);
         });
@@ -235,33 +200,82 @@
         document.getElementById('status-text').textContent = text;
     }
 
+    // ── Fallback: live check via proxy ──────────────────────────────────────
+    async function isLive(channel) {
+        try {
+            const url = encodeURIComponent(DECAPI_BASE + channel);
+            const res = await fetch(PROXY + url);
+            if (!res.ok) return false;
+            const txt = await res.text();
+            return /\d+\s+(hour|minute|second)/i.test(txt.trim());
+        } catch {
+            return false;
+        }
+    }
+
+    async function checkAllLive(list) {
+        const BATCH = 5;
+        const results = [];
+        for (let i = 0; i < list.length; i += BATCH) {
+            const flags = await Promise.all(list.slice(i, i + BATCH).map(s => isLive(s.channel)));
+            results.push(...flags);
+            if (i + BATCH < list.length) await new Promise(r => setTimeout(r, 400));
+        }
+        return results;
+    }
+
+    // ── Render results ──────────────────────────────────────────────────────
+    function applyLiveStatus(live) {
+        liveChannels = live;
+        const liveStreamers = streamers.filter(s => live.includes(s.channel));
+
+        if (liveStreamers.length > 0) {
+            document.getElementById('channel-grid').innerHTML =
+                liveStreamers.map(s => renderCard(s)).join('');
+            document.getElementById('streams-section').classList.remove('hidden');
+            selectChannel(liveStreamers[0].channel, liveStreamers[0].name);
+        } else {
+            document.getElementById('offline-message').classList.remove('hidden');
+        }
+    }
+
     // ── Main init ───────────────────────────────────────────────────────────
     async function init() {
         try {
-            // Load streamer list
             const res = await fetch('vpinhub_tv.json');
-            streamers  = await res.json();
+            streamers = await res.json();
 
-            // Check channels in batches to avoid proxy rate-limiting
+            // Fast path: read cached live_status.json written by GitHub Actions
+            try {
+                const statusRes = await fetch('live_status.json?t=' + Date.now());
+                if (!statusRes.ok) throw new Error('no status file');
+
+                const status = await statusRes.json();
+                const live   = status.live || [];
+                const updated = new Date(status.updated);
+                const age = Math.round((Date.now() - updated) / 60000);
+                const ageStr = age < 1 ? 'just now' : `${age}m ago`;
+
+                setStatus(live.length > 0
+                    ? `${live.length} stream${live.length !== 1 ? 's' : ''} live · checked ${ageStr}`
+                    : `No streams live · checked ${ageStr}`
+                );
+
+                applyLiveStatus(live);
+                return;
+            } catch { /* fall through to proxy */ }
+
+            // Fallback: check via AllOrigins proxy
+            setStatus('Checking streams via fallback…');
             const liveFlags = await checkAllLive(streamers);
-            liveChannels    = streamers.filter((_, i) => liveFlags[i]).map(s => s.channel);
+            const live = streamers.filter((_, i) => liveFlags[i]).map(s => s.channel);
 
-            setStatus(
-                liveChannels.length > 0
-                    ? `${liveChannels.length} stream${liveChannels.length > 1 ? 's' : ''} live now`
-                    : 'No streams live right now'
+            setStatus(live.length > 0
+                ? `${live.length} stream${live.length !== 1 ? 's' : ''} live now`
+                : 'No streams live right now'
             );
 
-            // Render live channel cards only
-            const liveStreamers = streamers.filter((_, i) => liveFlags[i]);
-            if (liveStreamers.length > 0) {
-                document.getElementById('channel-grid').innerHTML =
-                    liveStreamers.map(s => renderCard(s, true)).join('');
-                document.getElementById('streams-section').classList.remove('hidden');
-                selectChannel(liveStreamers[0].channel, liveStreamers[0].name);
-            } else {
-                document.getElementById('offline-message').classList.remove('hidden');
-            }
+            applyLiveStatus(live);
 
         } catch (err) {
             console.error('VPINHUB TV init error:', err);
