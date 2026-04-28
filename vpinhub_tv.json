@@ -1,7 +1,7 @@
 [
     {
         "channel": "PaladinArcade",
-        "name": "Pinball FX Open Challenge",
+        "name": "PaladinArcade",
         "description": "Ducks, Cowboys, Movie / Retro Talk, and Pinball.",
         "schedule": "Mon 8:30PM EST",
         "game": "FX3 / FX / Pinball M",
@@ -9,7 +9,7 @@
     },
     {
         "channel": "MostlyPirate",
-        "name": "Pindemonium",
+        "name": "MostlyPirate",
         "description": "Music, Video Games, Pinball and Pirate Chaos.",
         "schedule": "Tue 9:00PM EST",
         "game": "FX / Pinball M",
@@ -17,7 +17,7 @@
     },
     {
         "channel": "GameClubCentral",
-        "name": "Drain Freeze Tournament",
+        "name": "GameClubCentral",
         "description": "Retro Nostalgia, Music, Classic Vibes, and Pinball.",
         "schedule": "Wed 9:00PM EST",
         "game": "Pinball FX",
@@ -27,7 +27,7 @@
         "channel": "nilbog_grim",
         "name": "Nilbog Grim",
         "description": "Virtual pinball streams and community fun.",
-        "schedule": "TBA",
+        "schedule": "Sunday",
         "game": "Pinball",
         "color": "fuchsia"
     },
@@ -42,16 +42,16 @@
     {
         "channel": "MPT3K",
         "name": "MPT3K",
-        "description": "Virtual pinball streams and community fun.",
-        "schedule": "TBA",
+        "description": "Riff Theater Creator, Pinball Artist, Legend.",
+        "schedule": "Tue 11:00PM EST",
         "game": "Pinball",
         "color": "indigo"
     },
     {
         "channel": "djmpt3k",
         "name": "DJ MPT3K",
-        "description": "Virtual pinball streams and community fun.",
-        "schedule": "TBA",
+        "description": "Sunday DJ Stream.",
+        "schedule": "Sunday",
         "game": "Pinball",
         "color": "amber"
     },
@@ -65,16 +65,16 @@
     },
     {
         "channel": "PingTheNet",
-        "name": "Ping The Net",
-        "description": "Virtual pinball streams and community fun.",
+        "name": "PingTheNet",
+        "description": "Nature , Wildlife , Chill Vibes.",
         "schedule": "TBA",
-        "game": "Pinball",
+        "game": "The Librarian",
         "color": "cyan"
     },
     {
         "channel": "borgdog",
-        "name": "Borgdog",
-        "description": "Virtual pinball streams and community fun.",
+        "name": "BorgDog",
+        "description": "The BorgDog Collective.",
         "schedule": "TBA",
         "game": "Pinball",
         "color": "fuchsia"
@@ -82,15 +82,15 @@
     {
         "channel": "hawkeyez88",
         "name": "Hawkeyez88",
-        "description": "Virtual pinball streams and community fun.",
+        "description": "Pup-Packs , Slot Machines, and Golf.",
         "schedule": "TBA",
-        "game": "Pinball",
+        "game": "Slots",
         "color": "orange"
     },
     {
         "channel": "DrDoobee",
         "name": "Dr Doobee",
-        "description": "Virtual pinball streams and community fun.",
+        "description": "Pinball streams and community fun.",
         "schedule": "TBA",
         "game": "Pinball",
         "color": "indigo"
@@ -98,8 +98,8 @@
     {
         "channel": "the_living_arcade",
         "name": "The Living Arcade",
-        "description": "Virtual pinball streams and community fun.",
-        "schedule": "TBA",
+        "description": "Retro Nostalgia, Kilts, Aiming Juice, and Pinball.",
+        "schedule": "Mon 11:00PM EST",
         "game": "Pinball",
         "color": "amber"
     },
@@ -114,31 +114,31 @@
     {
         "channel": "brassleague",
         "name": "Brass League",
-        "description": "Virtual pinball streams and community fun.",
-        "schedule": "TBA",
+        "description": "World Class Brass League Gamer.",
+        "schedule": "Daily",
         "game": "Pinball",
         "color": "cyan"
     },
     {
         "channel": "lynnindenver",
         "name": "Lynn in Denver",
-        "description": "Virtual pinball streams and community fun.",
-        "schedule": "TBA",
+        "description": "Pinball streams and community fun.",
+        "schedule": "Saturday",
         "game": "Pinball",
         "color": "fuchsia"
     },
     {
         "channel": "reallybakedpinball",
         "name": "Really Baked Pinball",
-        "description": "Virtual pinball streams and community fun.",
+        "description": "DJ , Chess , Chill Vibes.",
         "schedule": "TBA",
         "game": "Pinball",
         "color": "orange"
     },
     {
         "channel": "sonic321master",
-        "name": "Sonic321 Master",
-        "description": "Virtual pinball streams and community fun.",
+        "name": "Sonic 321 Master",
+        "description": "The Master is here!",
         "schedule": "TBA",
         "game": "Pinball",
         "color": "indigo"
@@ -146,7 +146,7 @@
     {
         "channel": "otto_pinball",
         "name": "Otto Pinball",
-        "description": "Virtual pinball streams and community fun.",
+        "description": "Pinball and FPS Score Chasing",
         "schedule": "TBA",
         "game": "Pinball",
         "color": "amber"
@@ -154,16 +154,16 @@
     {
         "channel": "joepicasso",
         "name": "Joe Picasso",
-        "description": "Virtual pinball streams and community fun.",
-        "schedule": "TBA",
+        "description": "Pinball Creator , Score Chaser.",
+        "schedule": "Friday",
         "game": "Pinball",
         "color": "emerald"
     },
     {
         "channel": "surreal_7",
         "name": "Surreal 7",
-        "description": "Virtual pinball streams and community fun.",
-        "schedule": "TBA",
+        "description": "Community fun.",
+        "schedule": "Wednesday",
         "game": "Pinball",
         "color": "cyan"
     },
