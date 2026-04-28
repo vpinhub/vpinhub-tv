@@ -166,5 +166,37 @@
         "schedule": "TBA",
         "game": "Pinball",
         "color": "cyan"
+    },
+    {
+        "channel": "stangretro",
+        "name": "Stang Retro",
+        "description": "Virtual pinball streams and community fun.",
+        "schedule": "TBA",
+        "game": "Pinball",
+        "color": "fuchsia"
+    },
+    {
+        "channel": "daaxplays",
+        "name": "Daax Plays",
+        "description": "Virtual pinball streams and community fun.",
+        "schedule": "TBA",
+        "game": "Pinball",
+        "color": "orange"
+    },
+    {
+        "channel": "h3rbski_x",
+        "name": "H3rbski X",
+        "description": "Virtual pinball streams and community fun.",
+        "schedule": "TBA",
+        "game": "Pinball",
+        "color": "indigo"
+    },
+    {
+        "channel": "90s_craig",
+        "name": "90s Craig",
+        "description": "Virtual pinball streams and community fun.",
+        "schedule": "TBA",
+        "game": "Pinball",
+        "color": "amber"
     }
 ]

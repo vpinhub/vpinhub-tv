@@ -279,7 +279,7 @@
     // ── Fetch live list — cache first, proxy fallback if stale ─────────────
     // live_status.json is written by GitHub Actions but its schedule is unreliable.
     // If the file is older than STALE_MS, skip it and check via the proxy directly.
-    const STALE_MS = 35 * 60 * 1000; // 35 minutes — matches the 30-min Actions schedule
+    const STALE_MS = 30 * 60 * 1000; // 30 minutes — matches the 30-min fallback schedule
 
     async function fetchLive() {
         try {
