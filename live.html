@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VPINHUB TV</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: #020617; font-family: 'Segoe UI', sans-serif; }
+
+        #tv-frame {
+            border: none;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        #error {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            background: #020617;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        #error .icon { font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.4; }
+
+        #error h1 {
+            font-size: 1.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-style: italic;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+
+        #error p {
+            font-size: 0.8rem;
+            color: #64748b;
+            max-width: 400px;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        #error a {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #06b6d4;
+            text-decoration: none;
+            border: 1px solid rgba(6,182,212,0.3);
+            padding: 0.6rem 1.5rem;
+            border-radius: 9999px;
+        }
+
+        #error a:hover { background: rgba(6,182,212,0.1); }
+    </style>
+</head>
+<body>
+
+    <iframe id="tv-frame"
+        src="https://vpinhub.github.io/vpinhub-tv/index.html"
+        allowfullscreen
+        allow="autoplay; fullscreen">
+    </iframe>
+
+    <div id="error">
+        <div class="icon">📡</div>
+        <h1>Signal Lost</h1>
+        <p>VPINHUB TV is currently unreachable. Check your connection or try again in a moment.</p>
+        <a href="https://vpinhub.github.io/vpinhub-tv/index.html" target="_blank">Open Directly ↗</a>
+    </div>
+
+    <script>
+        const frame = document.getElementById('tv-frame');
+        const error = document.getElementById('error');
+
+        function showError() {
+            frame.style.display = 'none';
+            error.style.display = 'flex';
+        }
+
+        // Timeout — if iframe hasn't loaded in 12 seconds, assume unreachable
+        const timeout = setTimeout(showError, 12000);
+
+        frame.addEventListener('load', () => clearTimeout(timeout));
+
+        // Also do a lightweight fetch to catch hard network failures immediately
+        fetch('https://vpinhub.github.io/vpinhub-tv/index.html', { mode: 'no-cors', cache: 'no-store' })
+            .catch(showError);
+    </script>
+
+</body>
+</html>
