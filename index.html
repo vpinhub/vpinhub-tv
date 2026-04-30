@@ -333,12 +333,10 @@
 
     async function refresh() {
         try {
-            const { live, updated } = await fetchLive();
-            const age    = Math.round((Date.now() - updated) / 60000);
-            const ageStr = age < 1 ? 'just now' : `${age}m ago`;
+            const { live } = await fetchLive();
             setStatus(live.length > 0
-                ? `${live.length} stream${live.length !== 1 ? 's' : ''} live · checked ${ageStr}`
-                : `No streams live · checked ${ageStr}`
+                ? `${live.length} stream${live.length !== 1 ? 's' : ''} live · checked just now`
+                : `No streams live · checked just now`
             );
             applyLive(live);
         } catch (err) {

@@ -198,5 +198,21 @@
         "schedule": "TBA",
         "game": "Pinball",
         "color": "amber"
+    },
+    {
+        "channel": "laser_los",
+        "name": "Laser Los",
+        "description": "Pinball, Tournaments, Late Nights and Ripskis.",
+        "schedule": "Daily",
+        "game": "Pinball",
+        "color": "emerald"
+    },
+    {
+        "channel": "dave950lam",
+        "name": "Dave950lam",
+        "description": "Virtual pinball streams and community fun.",
+        "schedule": "TBA",
+        "game": "Pinball",
+        "color": "cyan"
     }
 ]
