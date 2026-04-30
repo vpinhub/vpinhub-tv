@@ -18,6 +18,7 @@
 
         .live-badge { background: #ef4444; color: white; font-size: 9px; font-weight: 900; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 0 15px rgba(239,68,68,0.4); }
         .live-dot { height: 6px; width: 6px; background: white; border-radius: 50%; animation: pulse 1.5s infinite; }
+        .offline-badge { background: #1e293b; color: #64748b; font-size: 9px; font-weight: 900; padding: 2px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.08); }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
         .color-amber  { --accent: #f59e0b; --accent-bg: rgba(245,158,11,0.15); --accent-dim: rgba(245,158,11,0.2); }
@@ -40,7 +41,6 @@
 </head>
 <body class="min-h-screen hero-gradient pb-20">
 
-<!-- Header -->
 <header class="container mx-auto px-6 py-12 text-center">
     <h1 class="text-6xl md:text-8xl font-black italic tracking-tighter uppercase mb-2">
         VPIN<span class="text-orange-500">HUB</span> <span class="text-cyan-400">TV</span>
@@ -59,7 +59,7 @@
         <span id="status-text">Checking streams...</span>
     </div>
 
-    <!-- Featured Player (shown when someone is live) -->
+    <!-- Live player (shown when someone is live) -->
     <section id="player-section" class="hidden mb-12">
         <div class="glass rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
             <div class="bg-white/5 px-6 py-3 border-b border-white/10 flex items-center justify-between">
@@ -90,16 +90,11 @@
                 <div class="flex flex-col lg:flex-row gap-4">
                     <div class="flex-1 min-w-0">
                         <div class="twitch-wrapper">
-                            <iframe id="twitch-player"
-                                src=""
-                                allowfullscreen
-                                allow="autoplay; fullscreen">
-                            </iframe>
+                            <iframe id="twitch-player" src="" allowfullscreen allow="autoplay; fullscreen"></iframe>
                         </div>
                     </div>
                     <div id="chat-panel" class="hidden w-full lg:w-80 xl:w-96 flex-shrink-0">
-                        <iframe id="twitch-chat"
-                            src=""
+                        <iframe id="twitch-chat" src=""
                             style="width:100%;height:100%;min-height:500px;border:none;border-radius:0.75rem;"
                             allowfullscreen>
                         </iframe>
@@ -109,113 +104,169 @@
         </div>
     </section>
 
-    <!-- No live streams message -->
-    <section id="offline-message" class="hidden mb-12">
-        <div class="glass rounded-2xl p-10 text-center border border-white/5">
-            <div class="text-5xl mb-4">📺</div>
-            <h2 class="text-xl font-black uppercase italic mb-2">No Streams Live Right Now</h2>
-            <p class="text-gray-500 text-sm">Check back soon — the community streams regularly throughout the week.</p>
+    <!-- Offline player (shown when no streams are live) -->
+    <section id="offline-player" class="hidden mb-12">
+        <div class="glass rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+            <div class="bg-white/5 px-6 py-3 border-b border-white/10 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="offline-badge">📺 Offline</span>
+                    <span id="offline-playlist-title" class="text-sm font-black uppercase tracking-widest text-gray-400"></span>
+                </div>
+                <div id="playlist-switcher" class="hidden items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+                    <button onclick="cyclePlaylist(-1)" class="text-gray-400 hover:text-white transition-colors">◀ Prev</button>
+                    <span class="text-white/20">|</span>
+                    <span id="playlist-counter" class="text-gray-500"></span>
+                    <span class="text-white/20">|</span>
+                    <button onclick="cyclePlaylist(1)" class="text-gray-400 hover:text-white transition-colors">Next ▶</button>
+                </div>
+            </div>
+            <div class="p-4">
+                <p class="text-center text-xs text-gray-500 italic mb-4">Nobody is live right now — enjoy these pre-recorded streams from the VPinHub community.</p>
+                <div class="twitch-wrapper">
+                    <div id="yt-player"></div>
+                </div>
+            </div>
         </div>
     </section>
 
-    <!-- Live Channel Grid (hidden when nobody is live) -->
+    <!-- Live channel grid -->
     <div id="streams-section" class="hidden">
         <div class="mb-4">
             <h2 class="text-xs font-black uppercase tracking-widest text-gray-500">Live Now</h2>
             <div class="border-b border-white/5 mt-2 mb-6"></div>
         </div>
-        <div id="channel-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Populated by JS -->
-        </div>
+        <div id="channel-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
     </div>
 
 </main>
 
 <script>
-    // Fallback proxy + DecAPI (used only when live_status.json is unavailable)
-    const PROXY        = 'https://api.allorigins.win/raw?url=';
-    const DECAPI_BASE  = 'https://decapi.me/twitch/uptime/';
     const TWITCH_EMBED = 'https://player.twitch.tv/?parent=vpinhub.com&parent=vpinhub.github.io&parent=localhost&channel=';
     const TWITCH_CHAT  = ch => `https://www.twitch.tv/embed/${ch}/chat?darkpopout&parent=vpinhub.com&parent=vpinhub.github.io&parent=localhost`;
 
-    let streamers    = [];
-    let liveChannels = [];
-    let activeChannel = null;
-    let chatOpen     = false;
+    let streamers         = [];
+    let playlists         = [];
+    let liveChannels      = [];
+    let activeChannel     = null;
+    let activePlaylistIdx = 0;
+    let chatOpen          = false;
+
+    // ── YouTube iframe API ──────────────────────────────────────────────────
+    let ytPlayer          = null;
+    let ytApiReady        = false;
+    let pendingPlaylistId = null;
+
+    // Injected by YouTube — must be on window
+    window.onYouTubeIframeAPIReady = function() {
+        ytApiReady = true;
+        if (pendingPlaylistId) {
+            createYouTubePlayer(pendingPlaylistId);
+            pendingPlaylistId = null;
+        }
+    };
+
+    (function() {
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        document.head.appendChild(tag);
+    })();
+
+    function createYouTubePlayer(playlistId) {
+        if (!ytApiReady) { pendingPlaylistId = playlistId; return; }
+        ytPlayer = new YT.Player('yt-player', {
+            playerVars: { listType: 'playlist', list: playlistId, autoplay: 1, rel: 0 },
+            events: {
+                onReady: function(e) {
+                    e.target.setShuffle(true);
+                    e.target.setLoop(true);
+                    e.target.playVideo();
+                }
+            }
+        });
+    }
 
     // ── Colour helpers ──────────────────────────────────────────────────────
     const COLOR_BORDERS = {
-        amber:   'border-amber-500',
-        emerald: 'border-emerald-500',
-        cyan:    'border-cyan-500',
-        fuchsia: 'border-fuchsia-500',
-        orange:  'border-orange-500',
-        indigo:  'border-indigo-500',
+        amber: 'border-amber-500', emerald: 'border-emerald-500', cyan: 'border-cyan-500',
+        fuchsia: 'border-fuchsia-500', orange: 'border-orange-500', indigo: 'border-indigo-500',
     };
 
-    // ── Render a channel card ───────────────────────────────────────────────
     function renderCard(streamer) {
         const color  = streamer.color || 'cyan';
         const border = COLOR_BORDERS[color] || 'border-cyan-500';
-        const isActive = activeChannel === streamer.channel;
-
         return `
-        <div class="channel-card color-${color} glass rounded-2xl p-6 border-t-4 card-border ${border} ${isActive ? 'active' : ''}"
+        <div class="channel-card color-${color} glass rounded-2xl p-6 border-t-4 card-border ${border} ${activeChannel === streamer.channel ? 'active' : ''}"
              onclick="selectChannel('${streamer.channel}', '${streamer.name}')"
              data-channel="${streamer.channel}">
             <div class="flex justify-between items-start mb-4">
-                <span class="card-tag text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
-                    ${streamer.schedule}
-                </span>
+                <span class="card-tag text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">${streamer.schedule}</span>
                 <div class="live-badge"><span class="live-dot"></span>Live</div>
             </div>
             <h3 class="text-xl font-black uppercase italic leading-tight mb-1">${streamer.name}</h3>
             <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-3">${streamer.channel} &middot; ${streamer.game}</p>
             <p class="text-gray-500 text-xs italic leading-relaxed">${streamer.description}</p>
             <div class="mt-6 pt-4 border-t border-white/5 card-footer font-bold uppercase text-[10px] tracking-widest flex justify-between items-center">
-                <span>Watch Now</span>
-                <span>▶</span>
+                <span>Watch Now</span><span>▶</span>
             </div>
         </div>`;
     }
 
-    // ── Switch the embedded player ──────────────────────────────────────────
     function selectChannel(channel, name) {
         if (!liveChannels.includes(channel)) return;
         activeChannel = channel;
-
         document.getElementById('twitch-player').src      = TWITCH_EMBED + channel;
         document.getElementById('player-name').textContent = name;
         document.getElementById('player-twitch-link').href = 'https://twitch.tv/' + channel;
         if (chatOpen) document.getElementById('twitch-chat').src = TWITCH_CHAT(channel);
 
         const switcher = document.getElementById('channel-switcher');
-        if (liveChannels.length > 1) {
-            switcher.classList.remove('hidden');
-            switcher.classList.add('flex');
-        } else {
-            switcher.classList.add('hidden');
-            switcher.classList.remove('flex');
-        }
+        switcher.classList.toggle('hidden', liveChannels.length <= 1);
+        switcher.classList.toggle('flex',   liveChannels.length > 1);
 
-        document.querySelectorAll('.channel-card').forEach(c => {
-            c.classList.toggle('active', c.dataset.channel === channel);
-        });
+        document.querySelectorAll('.channel-card').forEach(c =>
+            c.classList.toggle('active', c.dataset.channel === channel));
 
         document.getElementById('player-section').classList.remove('hidden');
-        document.getElementById('offline-message').classList.add('hidden');
+        document.getElementById('offline-player').classList.add('hidden');
+        if (ytPlayer) ytPlayer.stopVideo();
         document.getElementById('player-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    // ── Cycle through live channels ─────────────────────────────────────────
     function cycleChannel(direction) {
-        const idx  = liveChannels.indexOf(activeChannel);
-        const next = (idx + direction + liveChannels.length) % liveChannels.length;
-        const ch   = liveChannels[next];
+        const idx = liveChannels.indexOf(activeChannel);
+        const ch  = liveChannels[(idx + direction + liveChannels.length) % liveChannels.length];
         selectChannel(ch, streamers.find(s => s.channel === ch).name);
     }
 
-    // ── Toggle embedded chat panel ──────────────────────────────────────────
+    function showOfflinePlayer() {
+        if (!playlists.length) return;
+        const pl = playlists[activePlaylistIdx];
+        document.getElementById('offline-playlist-title').textContent = pl.title;
+
+        const switcher = document.getElementById('playlist-switcher');
+        switcher.classList.toggle('hidden', playlists.length <= 1);
+        switcher.classList.toggle('flex',   playlists.length > 1);
+        if (playlists.length > 1) {
+            document.getElementById('playlist-counter').textContent =
+                `${activePlaylistIdx + 1} / ${playlists.length}`;
+        }
+
+        document.getElementById('offline-player').classList.remove('hidden');
+
+        if (ytPlayer) {
+            // Swap playlist and re-shuffle
+            ytPlayer.setShuffle(true);
+            ytPlayer.loadPlaylist({ list: pl.id, listType: 'playlist' });
+        } else {
+            createYouTubePlayer(pl.id);
+        }
+    }
+
+    function cyclePlaylist(direction) {
+        activePlaylistIdx = (activePlaylistIdx + direction + playlists.length) % playlists.length;
+        showOfflinePlayer();
+    }
+
     function toggleChat() {
         chatOpen = !chatOpen;
         const panel = document.getElementById('chat-panel');
@@ -224,102 +275,48 @@
             document.getElementById('twitch-chat').src = TWITCH_CHAT(activeChannel);
             panel.classList.remove('hidden');
             btn.textContent = 'Hide Chat';
-            btn.classList.remove('hover:text-cyan-400');
-            btn.classList.add('hover:text-red-400');
+            btn.classList.replace('hover:text-cyan-400', 'hover:text-red-400');
         } else {
             panel.classList.add('hidden');
             document.getElementById('twitch-chat').src = '';
             btn.textContent = 'Chat ☰';
-            btn.classList.remove('hover:text-red-400');
-            btn.classList.add('hover:text-cyan-400');
+            btn.classList.replace('hover:text-red-400', 'hover:text-cyan-400');
         }
     }
 
-    // ── Pop chat out into a small window ────────────────────────────────────
     function popoutChat() {
-        if (activeChannel) {
-            window.open(
-                `https://www.twitch.tv/popout/${activeChannel}/chat?popout=`,
-                'twitch-chat-popout',
-                'width=400,height=600,resizable=yes'
-            );
-        }
+        if (activeChannel) window.open(
+            `https://www.twitch.tv/popout/${activeChannel}/chat?popout=`,
+            'twitch-chat-popout', 'width=400,height=600,resizable=yes'
+        );
     }
 
-    // ── Status bar helper ───────────────────────────────────────────────────
     function setStatus(text) {
         document.getElementById('checking-spinner').style.display = 'none';
         document.getElementById('status-text').textContent = text;
     }
 
-    // ── Fallback: live check via proxy ──────────────────────────────────────
-    async function isLive(channel) {
-        try {
-            const url = encodeURIComponent(DECAPI_BASE + channel);
-            const res = await fetch(PROXY + url);
-            if (!res.ok) return false;
-            const txt = await res.text();
-            return /\d+\s+(hour|minute|second)/i.test(txt.trim());
-        } catch {
-            return false;
-        }
-    }
-
-    async function checkAllLive(list) {
-        const BATCH = 5;
-        const results = [];
-        for (let i = 0; i < list.length; i += BATCH) {
-            const flags = await Promise.all(list.slice(i, i + BATCH).map(s => isLive(s.channel)));
-            results.push(...flags);
-            if (i + BATCH < list.length) await new Promise(r => setTimeout(r, 400));
-        }
-        return results;
-    }
-
-    // ── Fetch live list — cache first, proxy fallback if stale ─────────────
-    // live_status.json is written by GitHub Actions but its schedule is unreliable.
-    // If the file is older than STALE_MS, skip it and check via the proxy directly.
-    const STALE_MS = 30 * 60 * 1000; // 30 minutes — matches the 30-min fallback schedule
-
     async function fetchLive() {
-        try {
-            const r = await fetch('live_status.json?t=' + Date.now());
-            if (r.ok) {
-                const s   = await r.json();
-                const age = Date.now() - new Date(s.updated);
-                if (age < STALE_MS) {
-                    return { live: s.live || [], updated: new Date(s.updated) };
-                }
-            }
-        } catch { /* fall through */ }
-
-        // Cache missing or stale — check via proxy
-        const flags = await checkAllLive(streamers);
-        return {
-            live:    streamers.filter((_, i) => flags[i]).map(s => s.channel),
-            updated: new Date(),
-        };
+        const r = await fetch('live_status.json?t=' + Date.now());
+        const s = await r.json();
+        return { live: s.live || [], updated: new Date(s.updated) };
     }
 
-    // ── Apply live list to the UI ───────────────────────────────────────────
     function applyLive(live) {
         liveChannels = live;
         const liveStreamers = streamers.filter(s => live.includes(s.channel));
 
         if (liveStreamers.length > 0) {
-            document.getElementById('channel-grid').innerHTML =
-                liveStreamers.map(renderCard).join('');
+            document.getElementById('channel-grid').innerHTML = liveStreamers.map(renderCard).join('');
             document.getElementById('streams-section').classList.remove('hidden');
-            document.getElementById('offline-message').classList.add('hidden');
+            document.getElementById('offline-player').classList.add('hidden');
+            if (ytPlayer) ytPlayer.stopVideo();
 
             if (!activeChannel || !live.includes(activeChannel)) {
-                // Active channel gone or nothing playing — pick the first live one
                 selectChannel(liveStreamers[0].channel, liveStreamers[0].name);
             } else {
-                // Keep current channel playing, just refresh card highlights
-                document.querySelectorAll('.channel-card').forEach(c => {
-                    c.classList.toggle('active', c.dataset.channel === activeChannel);
-                });
+                document.querySelectorAll('.channel-card').forEach(c =>
+                    c.classList.toggle('active', c.dataset.channel === activeChannel));
             }
         } else {
             document.getElementById('streams-section').classList.add('hidden');
@@ -330,11 +327,10 @@
                 activeChannel = null;
                 if (chatOpen) toggleChat();
             }
-            document.getElementById('offline-message').classList.remove('hidden');
+            showOfflinePlayer();
         }
     }
 
-    // ── Refresh cycle (called on load and every 5 minutes) ─────────────────
     async function refresh() {
         try {
             const { live, updated } = await fetchLive();
@@ -348,18 +344,20 @@
         } catch (err) {
             console.error('VPINHUB TV refresh error:', err);
             setStatus('Could not load stream data — please try refreshing');
-            document.getElementById('offline-message').classList.remove('hidden');
+            showOfflinePlayer();
         }
     }
 
-    // ── Main init ───────────────────────────────────────────────────────────
     async function init() {
         try {
-            streamers = await fetch('vpinhub_tv.json').then(r => r.json());
+            [streamers, playlists] = await Promise.all([
+                fetch('vpinhub_tv.json').then(r => r.json()),
+                fetch('playlists.json').then(r => r.json()).catch(() => []),
+            ]);
         } catch (err) {
             console.error('VPINHUB TV init error:', err);
             setStatus('Could not load channel list — please try refreshing');
-            document.getElementById('offline-message').classList.remove('hidden');
+            showOfflinePlayer();
             return;
         }
         await refresh();
