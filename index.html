@@ -42,9 +42,11 @@
 <body class="min-h-screen hero-gradient pb-20">
 
 <header class="container mx-auto px-6 py-12 text-center">
-    <h1 class="text-6xl md:text-8xl font-black italic tracking-tighter uppercase mb-2">
-        VPIN<span class="text-orange-500">HUB</span> <span class="text-cyan-400">TV</span>
-    </h1>
+    <a href="https://vpinhub.com" class="inline-block hover:opacity-80 transition-opacity">
+        <h1 class="text-6xl md:text-8xl font-black italic tracking-tighter uppercase mb-2">
+            VPIN<span class="text-orange-500">HUB</span> <span class="text-cyan-400">TV</span>
+        </h1>
+    </a>
     <p class="medieval text-gray-400 tracking-[0.3em] uppercase text-sm">Virtual Pinball Live Streams</p>
 </header>
 
@@ -179,7 +181,12 @@
                 onReady: function(e) {
                     e.target.setShuffle(true);
                     e.target.setLoop(true);
-                    e.target.playVideo();
+                    const list = e.target.getPlaylist();
+                    if (list && list.length > 1) {
+                        e.target.playVideoAt(Math.floor(Math.random() * list.length));
+                    } else {
+                        e.target.playVideo();
+                    }
                 }
             }
         });
