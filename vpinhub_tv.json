@@ -16,8 +16,8 @@
         "color": "emerald"
     },
     {
-        "channel": "GameClubCentral",
-        "name": "GameClubCentral",
+        "channel": "pinsrus",
+        "name": "Pins R Us",
         "description": "Retro Nostalgia, Music, Classic Vibes, and Pinball.",
         "schedule": "Wed 9:00PM EST",
         "game": "Pinball FX",
@@ -211,6 +211,14 @@
         "channel": "dave950lam",
         "name": "Dave950lam",
         "description": "Virtual pinball streams and community fun.",
+        "schedule": "TBA",
+        "game": "Pinball",
+        "color": "cyan"
+    },
+    {
+        "channel": "hangarpinball",
+        "name": "Hangar Pinball",
+        "description": "Hangar Pinball is based out of Tulsa, Oklahoma! Providing a Kick Ass pinball adventure with plenty of games at Magoo's in Tulsa, OK. ",
         "schedule": "TBA",
         "game": "Pinball",
         "color": "cyan"
