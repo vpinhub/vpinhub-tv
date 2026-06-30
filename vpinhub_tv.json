@@ -222,5 +222,85 @@
         "schedule": "TBA",
         "game": "Pinball",
         "color": "cyan"
+    },
+    {
+        "channel": "flannelkat",
+        "name": "Flannelkat",
+        "description": "Daily retro gaming.",
+        "schedule": "Daily",
+        "game": "Retro",
+        "color": "fuchsia"
+    },
+    {
+        "channel": "arborelia",
+        "name": "arborelia",
+        "description": "Pinball and Retro",
+        "schedule": "Thu 8:00PM EST",
+        "game": "Pinball",
+        "color": "emerald"
+    },
+    {
+        "channel": "vinnyblanc",
+        "name": "vinnyblanc",
+        "description": "Pinball and sports",
+        "schedule": "TBA",
+        "game": "Pinball",
+        "color": "amber"
+    },
+    {
+        "channel": "flipstream",
+        "name": "Flipstream",
+        "description": "Pinball and Retro",
+        "schedule": "TBA",
+        "game": "Pinball",
+        "color": "cyan"
+    },
+    {
+        "channel": "dontpanicflip",
+        "name": "DontPanicFlip",
+        "description": "Parent, Software Developer, Conversationally Challenged Pinball Streamer, Blogger, Intrepid Technology Adventurer",
+        "schedule": "Tue & Wed 12:00AM",
+        "game": "Pinball",
+        "color": "fuchsia"
+    },
+    {
+        "channel": "rlmamusements",
+        "name": "RLM Amusements",
+        "description": "RLM Amusements provides repair services & sales of pinball machines and arcade games in the Grand Rapids, Michigan area. Our arcade is open Fridays and Saturdays for public play. We live stream our pinball tournaments every Friday night starting at 10pm.",
+        "schedule": "Fri 10:00PM EST",
+        "game": "Pinball",
+        "color": "orange"
+    },
+    {
+        "channel": "austinpinballcollective",
+        "name": "Austin Pinball Collective",
+        "description": "The Austin Pinball Collective is a membership based nonprofit organization dedicated to preserving and celebrating the history, artistry, and craftsmanship of pinball.",
+        "schedule": "TBA",
+        "game": "Pinball",
+        "color": "indigo"
+    },
+    {
+        "channel": "dirtypoolpinball",
+        "name": "Dirty Pool Pinball",
+        "description": "Pinball Streamer | Podcast | Freelance Pinball Composer & Sound Designer All Praise The Great Pyramid 🔺👇",
+        "schedule": "TBA",
+        "game": "Pinball",
+        "color": "amber"
+    },
+    {
+        "channel": "deadflip",
+        "name": "DeadFlip",
+        "description": "Hosted by Jack Danger. Our goal is to promote Pinball, and help others acclimate themselves with the game. Come in and ask a few questions, and become a better player for it!",
+        "schedule": "TBA",
+        "game": "Pinball",
+        "color": "emerald"
+    },
+    {
+        "channel": "homegrownb_dub",
+        "name": "homegrownb_dub",
+        "description": "Pinball!",
+        "schedule": "TBA",
+        "game": "Pinball",
+        "color": "cyan"
     }
 ]
