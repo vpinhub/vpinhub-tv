@@ -1,6 +1,7 @@
 {
-  "updated": "2026-08-24T18:50:34.707252+00:00",
+  "updated": "2026-08-24T21:43:46.020403+00:00",
   "live": [
-    "PingTheNet"
+    "PingTheNet",
+    "laser_los"
   ]
 }
