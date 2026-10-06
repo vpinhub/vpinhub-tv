@@ -1,6 +1,7 @@
 {
-  "updated": "2026-10-06T00:30:38.091676+00:00",
+  "updated": "2026-10-06T00:51:18.913366+00:00",
   "live": [
-    "PaladinArcade"
+    "PaladinArcade",
+    "laser_los"
   ]
 }
