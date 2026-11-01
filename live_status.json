@@ -1,7 +1,9 @@
 {
-  "updated": "2026-11-01T19:30:47.714105+00:00",
+  "updated": "2026-11-01T19:40:57.228820+00:00",
   "live": [
+    "otto_pinball",
     "surreal_7",
-    "laser_los"
+    "laser_los",
+    "dirtypoolpinball"
   ]
 }
